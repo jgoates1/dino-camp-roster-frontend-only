@@ -8,19 +8,27 @@ interface CamperCardProps {
   name: string;
   username: string;
   emoji: string;
-  onSave: (newUsername: string) => void;
+  onSave: (newUsername: string) => Promise<void>;
 }
 
 const CamperCard = ({ name, username, emoji, onSave }: CamperCardProps) => {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(username);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
-    onSave(draft);
-    setEditing(false);
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 2000);
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await onSave(draft);
+      setEditing(false);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 2000);
+    } catch {
+      // Error handled by parent (toast)
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -44,8 +52,8 @@ const CamperCard = ({ name, username, emoji, onSave }: CamperCardProps) => {
                   className="h-9 text-sm"
                   autoFocus
                 />
-                <Button size="sm" onClick={handleSave} className="shrink-0">
-                  <Check className="h-4 w-4 mr-1" /> Save
+                <Button size="sm" onClick={handleSave} disabled={isSaving} className="shrink-0">
+                  <Check className="h-4 w-4 mr-1" /> {isSaving ? "Saving..." : "Save"}
                 </Button>
                 <Button size="sm" variant="outline" onClick={handleCancel} className="shrink-0">
                   <X className="h-4 w-4 mr-1" /> Cancel
